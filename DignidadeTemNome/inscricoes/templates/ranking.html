@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Ranking de Inscrições</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Nome</th>
+                <th>Idade</th>
+                <th>Renda</th>
+                <th>Etnia</th>
+                <th>População de Rua</th>
+                <th>Gênero</th>
+                <th>Pontuação</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inscrito in inscritos %}
+            <tr>
+                <td>{{ inscrito.nome_civil }}</td>
+                <td>{{ inscrito.calcular_idade }}</td>
+                <td>{{ inscrito.get_renda_familiar_display }}</td>
+                <td>{{ inscrito.get_etnia_display }}</td>
+                <td>{{ inscrito.populacao_de_rua|yesno:"Sim,Não" }}</td>
+                <td>{{ inscrito.get_genero_sexualidade_display }}</td>
+                <td><strong>{{ inscrito.pontuacao }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
