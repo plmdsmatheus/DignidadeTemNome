@@ -10,6 +10,7 @@ class Inscricao(models.Model):
         ('4-5', 'de quatro a cinco salários mínimos'),
         ('>5', 'mais de cinco salários mínimos'),
     ]
+
     ETNIA_CHOICES = [
         ('negra', 'Negra'),
         ('indigena', 'Indígena'),
@@ -20,6 +21,29 @@ class Inscricao(models.Model):
         ('amarela', 'Amarela'),
     ]
 
+    TERRITORIO_CHOICES = [
+        ('metropolitana', 'Território Região Metropolitana de Natal'),
+        ('agreste', 'Território Agreste / Litoral Sul'),
+        ('mato_grande', 'Território Mato Grande'),
+        ('potengi', 'Território Potengi'),
+        ('trairi', 'Território Trairí'),
+        ('sertao_central', 'Território Sertão Central Cabugi / Litoral Norte'),
+        ('serido', 'Território Seridó'),
+        ('assu_mossoro', 'Território Assú / Mossoró'),
+        ('apodi', 'Território Sertão do Apodi'),
+        ('alto_oeste', 'Território Alto Oeste'),
+    ]
+
+    GENERO_CHOICES = [
+        ('travesti', 'Travesti'),
+        ('mulher_transexual', 'Mulher Transexual'),
+        ('homem_transexual', 'Homem Transexual'),
+        ('intersexual', 'Intersexual'),
+        ('nao_binario', 'Não Binárie'),
+        ('trans_masculine', 'Trans Masculine'),
+        ('outro', 'Outro'),
+    ]
+
     nome_civil = models.CharField(max_length=200)
     nome_social = models.CharField(max_length=200, blank=True)
     rg_numero = models.CharField(max_length=50)
@@ -27,13 +51,13 @@ class Inscricao(models.Model):
     cpf = models.CharField(max_length=14)
     data_nascimento = models.DateField()
     renda_familiar = models.CharField(max_length=10, choices=RENDA_CHOICES)
-    territorio = models.CharField(max_length=100)
+    territorio = models.CharField(max_length=50, choices=TERRITORIO_CHOICES)
     telefone = models.CharField(max_length=20)
-    genero_sexualidade = models.CharField(max_length=100)
+    genero_sexualidade = models.CharField(max_length=50, choices=GENERO_CHOICES)
     etnia = models.CharField(max_length=20, choices=ETNIA_CHOICES)
     populacao_de_rua = models.BooleanField(default=False)
     rg_anexo = models.FileField(upload_to='documentos/')
-    
+
     pontuacao = models.FloatField(default=0)
 
     def calcular_idade(self):
