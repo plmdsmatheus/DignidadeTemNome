@@ -1,38 +1,15 @@
 from django.db import models
+from datetime import date
 
 class Inscricao(models.Model):
     RENDA_CHOICES = [
-        ('menos_de_um', 'Menos de um salário mínimo'),
-        ('ate_um', 'Até um salário mínimo'),
-        ('dois_a_tres', 'De dois a três salários mínimos'),
-        ('tres_a_quatro', 'De três a quatro salários mínimos'),
-        ('quatro_a_cinco', 'De quatro a cinco salários mínimos'),
-        ('outro', 'Outro'),
+        ('<1', 'menos de um salário mínimo'),
+        ('1', 'até um salário mínimo'),
+        ('2-3', 'de dois a três salários mínimos'),
+        ('3-4', 'de três a quatro salários mínimos'),
+        ('4-5', 'de quatro a cinco salários mínimos'),
+        ('>5', 'mais de cinco salários mínimos'),
     ]
-
-    TERRITORIO_CHOICES = [
-        ('rmn', 'Região Metropolitana de Natal'),
-        ('agreste', 'Agreste / Litoral Sul'),
-        ('mato_grande', 'Mato Grande'),
-        ('potengi', 'Potengi'),
-        ('trairi', 'Trairí'),
-        ('sertao_cabugi', 'Sertão Central Cabugi / Litoral Norte'),
-        ('serido', 'Seridó'),
-        ('assu_mossoro', 'Assú / Mossoró'),
-        ('sertao_apodi', 'Sertão do Apodi'),
-        ('alto_oeste', 'Alto Oeste'),
-    ]
-
-    GENERO_CHOICES = [
-        ('travesti', 'Travesti'),
-        ('mulher_transexual', 'Mulher Transexual'),
-        ('homem_transexual', 'Homem Transexual'),
-        ('intersexual', 'Intersexual'),
-        ('nao_binario', 'Não Binárie'),
-        ('trans_masculine', 'Trans Masculine'),
-        ('outro', 'Outro'),
-    ]
-
     ETNIA_CHOICES = [
         ('negra', 'Negra'),
         ('indigena', 'Indígena'),
@@ -43,18 +20,52 @@ class Inscricao(models.Model):
         ('amarela', 'Amarela'),
     ]
 
-    renda_familiar = models.CharField(max_length=20, choices=RENDA_CHOICES)
-    nome_civil = models.CharField(max_length=255)
-    nome_social = models.CharField(max_length=255, blank=True, null=True)
-    rg_numero = models.CharField(max_length=20)
+    nome_civil = models.CharField(max_length=200)
+    nome_social = models.CharField(max_length=200, blank=True)
+    rg_numero = models.CharField(max_length=50)
     rg_orgao_expedidor = models.CharField(max_length=50)
     cpf = models.CharField(max_length=14)
     data_nascimento = models.DateField()
-    rg_anexo = models.FileField(upload_to='uploads/rg/')
-    territorio = models.CharField(max_length=30, choices=TERRITORIO_CHOICES)
+    renda_familiar = models.CharField(max_length=10, choices=RENDA_CHOICES)
+    territorio = models.CharField(max_length=100)
     telefone = models.CharField(max_length=20)
-    genero_sexualidade = models.CharField(max_length=30, choices=GENERO_CHOICES)
+    genero_sexualidade = models.CharField(max_length=100)
     etnia = models.CharField(max_length=20, choices=ETNIA_CHOICES)
+    populacao_de_rua = models.BooleanField(default=False)
+    rg_anexo = models.FileField(upload_to='documentos/')
+    
+    pontuacao = models.FloatField(default=0)
+
+    def calcular_idade(self):
+        hoje = date.today()
+        return hoje.year - self.data_nascimento.year - ((hoje.month, hoje.day) < (self.data_nascimento.month, self.data_nascimento.day))
+
+    def calcular_pontuacao(self):
+        idade = self.calcular_idade()
+        idade_peso = 1 + idade / 100
+        renda_peso = {
+            '<1': 1.5,
+            '1': 1.4,
+            '2-3': 1.3,
+            '3-4': 1.2,
+            '4-5': 1.1,
+            '>5': 1.0
+        }.get(self.renda_familiar, 1.0)
+        etnia_peso = {
+            'negra': 1.4,
+            'indigena': 1.4,
+            'cigana': 1.4,
+            'quilombola': 1.4,
+            'parda': 1.2,
+            'branca': 1.0,
+            'amarela': 1.0
+        }.get(self.etnia, 1.0)
+        rua_peso = 1.5 if self.populacao_de_rua else 1.0
+        self.pontuacao = round(10 * idade_peso * renda_peso * etnia_peso * rua_peso, 2)
+
+    def save(self, *args, **kwargs):
+        self.calcular_pontuacao()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.nome_civil
